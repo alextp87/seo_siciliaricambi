@@ -24,7 +24,7 @@ if uploaded_products and uploaded_funzioni and api_key:
 
     results = []
     for _, row in df_products.iterrows():
-        id_prodotto = row['ID']
+        id_prodotto = row['Product ID']
         nome = row['NOME']
         marca = row['BRAND NAME']
         tipo = row.get('TIPO', '') or ''
