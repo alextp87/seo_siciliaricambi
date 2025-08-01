@@ -47,8 +47,8 @@ if st.button("🚀 Avvia generazione SEO"):
         st.error("Per favore, inserisci la tua API key e carica entrambi i file CSV.")
     else:
         try:
-            df_products = pd.read_csv(uploaded_products)
-            df_funzioni = pd.read_csv(uploaded_funzioni, encoding='utf-8')
+            df_products = pd.read_csv(uploaded_products, encoding='latin1')
+
 
             results = []
             for _, row in df_products.iterrows():
