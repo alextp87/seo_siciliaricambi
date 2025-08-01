@@ -1,43 +1,43 @@
 
 import streamlit as st
 import pandas as pd
+import openai
 from collections import defaultdict
+import os
+from dotenv import load_dotenv
 
-st.set_page_config(page_title="SiciliaRicambi SEO Generator", layout="wide")
+st.set_page_config(page_title="SiciliaRicambi SEO Generator (ChatGPT)", layout="wide")
 
-st.title("🚀 SiciliaRicambi SEO Generator")
-st.write("Genera descrizioni, meta title, meta description e script SQL per ETS SEO")
+st.title("🤖 SiciliaRicambi SEO Generator con ChatGPT")
+st.write("Genera descrizioni SEO dinamiche utilizzando l'intelligenza artificiale di OpenAI.")
+
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 uploaded_products = st.file_uploader("Carica Products.csv", type=["csv"])
 uploaded_functions = st.file_uploader("Carica Funzioni.csv", type=["csv"])
+model = st.selectbox("Seleziona il modello OpenAI", ["gpt-3.5-turbo", "gpt-4o"])
 
-mode = st.radio("Modalità generazione descrizioni", ["ETS SEO (senza link)", "Google SEO (con link)"])
+def genera_descrizione_chatgpt(nome, marca, tipo, codice, keyword, modello):
+    prompt = f"""
+Sei un copywriter SEO professionale. Genera una descrizione HTML di almeno 300 parole per un prodotto automobilistico.
+Dati del prodotto:
+- Nome: {nome}
+- Marca del ricambio: {marca}
+- Tipo: {tipo}
+- Codice OE: {codice}
+- Keyword principale: {keyword}
 
-def genera_descrizione(nome, marca, tipo, codice, keyword, mode):
-    keyphrase = keyword
-    descrizione = f"""
-<p>{keyphrase} è un ricambio auto di qualità progettato per offrire affidabilità e durata nel tempo. 
-Realizzato con materiali resistenti, è indicato per chi desidera mantenere il proprio veicolo in condizioni ottimali.</p>
-
-<p>Questo {tipo.lower()} originale {marca} è compatibile con i veicoli indicati e corrisponde al codice OEM {codice}. 
-La nostra keyphrase principale {keyphrase} appare più volte per evidenziare la pertinenza SEO.</p>
-
-<ul>
-<li>Prodotto originale e testato per garantire massima compatibilità.</li>
-<li>Resistente all’usura, ideale per manutenzione o sostituzione.</li>
-<li>Coperto da 2 anni di garanzia ufficiale.</li>
-<li>Spedizione rapida in tutta Italia.</li>
-</ul>
-
-<p>{keyphrase} è la soluzione perfetta per chi vuole mantenere prestazioni e sicurezza.
-L'installazione consigliata è presso officine specializzate, seguendo le istruzioni del costruttore.</p>
-
-<p>Controlla sempre la corrispondenza del codice OEM {codice} prima dell'acquisto.
-Scegliendo {keyphrase} garantisci compatibilità, durata e tranquillità nella guida.</p>
+Usa un linguaggio professionale, includi almeno 3 volte la keyword e rendi la descrizione adatta per un sito ecommerce.
+Includi punti elenco HTML, usa paragrafi ben strutturati e mantieni uno stile coerente.
 """
-    if mode == "Google SEO (con link)":
-        descrizione += f'<p>Scopri di più sui ricambi auto su <a href="https://it.wikipedia.org/wiki/Autoveicolo" target="_blank">Wikipedia</a>.</p>'
-    return descrizione.strip()
+    response = openai.ChatCompletion.create(
+        model=modello,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+        max_tokens=1000
+    )
+    return response.choices[0].message.content.strip()
 
 if uploaded_products and uploaded_functions:
     products_df = pd.read_csv(uploaded_products, encoding='utf-8', sep=None, engine='python')
@@ -63,10 +63,9 @@ if uploaded_products and uploaded_functions:
 
         keyword = f"{nome} {marca}".strip()
         meta_title = keyword[:60]
-        meta_description = f"Acquista {keyword} originale, spedizione veloce e 2 anni di garanzia."
-        meta_description = meta_description[:156]
+        meta_description = f"Acquista {keyword} originale, spedizione veloce e 2 anni di garanzia."[:156]
 
-        descrizione_html = genera_descrizione(nome, marca, tipo, codice, keyword, mode)
+        descrizione_html = genera_descrizione_chatgpt(nome, marca, tipo, codice, keyword, model)
 
         output_rows.append([pid, nome, meta_title, meta_description, keyword, descrizione_html])
         sql_rows.append(f"({pid}, '{keyword.replace("'", "''")}')")
@@ -74,7 +73,7 @@ if uploaded_products and uploaded_functions:
     final_df = pd.DataFrame(output_rows, columns=[
         'ID_PRODOTTO','NOME_PRODOTTO','META_TITLE','META_DESCRIPTION','KEYWORD','DESCRIZIONE_HTML'
     ])
-    st.download_button("⬇️ Scarica CSV ottimizzato", data=final_df.to_csv(sep=';', index=False, encoding='utf-8'), file_name="ets_seo_products_optimized.csv", mime="text/csv")
+    st.download_button("⬇️ Scarica CSV ottimizzato", data=final_df.to_csv(sep=';', index=False, encoding='utf-8'), file_name="ets_seo_chatgpt.csv", mime="text/csv")
 
     sql_script = f"""
 CREATE TABLE tmp_focus_keywords (
@@ -90,10 +89,8 @@ JOIN tmp_focus_keywords AS tmp
   ON seo.id_product = tmp.id_product
 SET seo.key_phrase = tmp.key_phrase;
 
-SELECT id_product, key_phrase FROM ps_ets_seo_product WHERE key_phrase IS NOT NULL LIMIT 20;
-
 DROP TABLE tmp_focus_keywords;
 """
     st.download_button("⬇️ Scarica Script SQL", data=sql_script, file_name="import_keyphrase.sql", mime="text/plain")
 
-    st.success("✅ CSV e Script SQL pronti!")
+    st.success("✅ File pronti e generati con ChatGPT!")

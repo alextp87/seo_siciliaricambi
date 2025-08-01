@@ -1,54 +1,29 @@
-# SiciliaRicambi SEO Generator
+# SiciliaRicambi SEO Generator (con ChatGPT)
 
-Uno strumento automatizzato per generare descrizioni prodotto, meta title, meta description e keyphrase ottimizzate per il modulo ETS SEO di PrestaShop.
-
-## ✅ Requisiti
+## Requisiti
 - Python 3.8+
-- Librerie: `streamlit`, `pandas`
+- Librerie: streamlit, pandas, openai, python-dotenv
 
-Installa i requisiti con:
-```
-pip install -r requirements.txt
-```
+## Avvio
+1. Inserisci la tua API key nel file `.env`:
+   ```
+   OPENAI_API_KEY=sk-xxxxxx
+   ```
 
-## 📂 File richiesti
+2. Installa le dipendenze:
+   ```
+   pip install -r requirements.txt
+   ```
 
-### 1. Products.csv
-- Contiene:
-  - `ID_Prodotto` (colonna 1)
-  - `Nome` (nome del prodotto)
+3. Avvia il tool:
+   ```
+   streamlit run seo_generator.py
+   ```
 
-### 2. Funzioni.csv
-- Contiene:
-  - `ID_Prodotto`
-  - `Funzione`
-  - `Valore`
+## Input
+- `Products.csv` con: ID_Prodotto, Nome
+- `Funzioni.csv` con: ID_Prodotto, Funzione, Valore
 
-## 🚀 Come si usa
-
-1. Avvia il tool:
-```bash
-streamlit run seo_generator.py
-```
-
-2. Carica `Products.csv` e `Funzioni.csv`
-
-3. Scegli la modalità SEO
-
-4. Scarica:
-   - `ets_seo_products_optimized.csv`
-   - `import_keyphrase.sql`
-
-## 🛠️ Import in PrestaShop
-
-### CSV
-- Importa `ets_seo_products_optimized.csv` nel modulo ETS SEO mappando:
-  - Nome prodotto
-  - Meta title
-  - Meta description
-  - Keyphrase
-  - Descrizione
-
-### SQL
-- Esegui `import_keyphrase.sql` nel tuo MySQL
-
+## Output
+- CSV ottimizzato per ETS SEO
+- SQL per keyphrase nel DB
